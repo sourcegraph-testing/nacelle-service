@@ -3,6 +3,8 @@
 [![GoDoc](https://godoc.org/github.com/efritz/bussard?status.svg)](https://godoc.org/github.com/efritz/bussard)
 [![Build Status](https://secure.travis-ci.org/efritz/bussard.png)](http://travis-ci.org/efritz/bussard)
 [![codecov.io](http://codecov.io/github/efritz/bussard/coverage.svg?branch=master)](http://codecov.io/github/efritz/bussard?branch=master)
+[![Maintainability](https://api.codeclimate.com/v1/badges/5f7ceba80716e77fe9fe/maintainability)](https://codeclimate.com/github/efritz/bussard/maintainability)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/5f7ceba80716e77fe9fe/test_coverage)](https://codeclimate.com/github/efritz/bussard/test_coverage)
 
 Bussard is a service container and dependency injection tool for Golang.
 
