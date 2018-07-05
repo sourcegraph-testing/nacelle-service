@@ -89,7 +89,7 @@ func (s *ServiceSuite) TestUnsettableFields(t sweet.T) {
 	container := NewServiceContainer()
 	container.Set("value", &IntWrapper{42})
 	err := container.Inject(&TestUnsettableService{})
-	Expect(err).To(MatchError("field 'value' can not be set"))
+	Expect(err).To(MatchError("field 'value' can not be set - it may be unexported"))
 }
 
 func (s *ServiceSuite) TestDuplicateRegistration(t sweet.T) {

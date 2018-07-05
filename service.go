@@ -129,7 +129,7 @@ func loadServiceField(container *serviceContainer, fieldType reflect.StructField
 	}
 
 	if !fieldValue.CanSet() {
-		return fmt.Errorf("field '%s' can not be set", fieldType.Name)
+		return fmt.Errorf("field '%s' can not be set - it may be unexported", fieldType.Name)
 	}
 
 	value, err := container.Get(serviceTag)
