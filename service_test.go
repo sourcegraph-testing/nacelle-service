@@ -92,6 +92,37 @@ func (s *ServiceSuite) TestUnsettableFields(t sweet.T) {
 	Expect(err).To(MatchError("field 'value' can not be set - it may be unexported"))
 }
 
+func (s *ServiceSuite) TestPostInject(t sweet.T) {
+	container := NewServiceContainer()
+	obj := &SimplePostInjectProcess{}
+	container.Set("value", &IntWrapper{42})
+	err := container.Inject(obj)
+	Expect(err).To(BeNil())
+	Expect(obj.FValue.val).To(Equal(42.0))
+}
+
+func (s *ServiceSuite) TestPostInjectError(t sweet.T) {
+	container := NewServiceContainer()
+	obj := &ErrorPostInjectProcess{}
+	container.Set("value", &IntWrapper{42})
+	err := container.Inject(obj)
+	Expect(err).To(MatchError("utoh"))
+}
+
+func (s *ServiceSuite) TestPostInjectChain(t sweet.T) {
+	container := NewServiceContainer()
+	obj := &RootInjectProcess{}
+	process := &SimplePostInjectProcess{}
+
+	container.Set("value", &IntWrapper{42})
+	container.Set("process", process)
+	container.Set("container", container)
+
+	err := container.Inject(obj)
+	Expect(err).To(BeNil())
+	Expect(process.FValue.val).To(Equal(42.0))
+}
+
 func (s *ServiceSuite) TestDuplicateRegistration(t sweet.T) {
 	container := NewServiceContainer()
 	err1 := container.Set("dup", struct{}{})

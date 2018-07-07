@@ -32,6 +32,12 @@ type (
 		Inject(obj interface{}) error
 	}
 
+	// PostInject is a marker interface for injectable objects which should
+	// perform some action after injection of services.
+	PostInject interface {
+		PostInject() error
+	}
+
 	serviceContainer struct {
 		services map[string]interface{}
 	}
@@ -118,6 +124,10 @@ func (c *serviceContainer) Inject(obj interface{}) error {
 		if err := loadServiceField(c, fieldType, fieldValue, serviceTag, optionalTag); err != nil {
 			return err
 		}
+	}
+
+	if pi, ok := obj.(PostInject); ok {
+		return pi.PostInject()
 	}
 
 	return nil
