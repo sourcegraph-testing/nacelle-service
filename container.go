@@ -99,38 +99,81 @@ func (c *serviceContainer) MustSet(service string, value interface{}) {
 // may occur if a service has not been registered, a service has a
 // different type than expected, or struct tags are malformed.
 func (c *serviceContainer) Inject(obj interface{}) error {
+	_, err := c.inject(obj, nil, nil)
+	return err
+}
+
+func (c *serviceContainer) inject(obj interface{}, root *reflect.Value, baseIndexPath []int) (bool, error) {
 	var (
 		ov = reflect.ValueOf(obj)
 		oi = reflect.Indirect(ov)
 		ot = oi.Type()
 	)
 
-	if oi.Kind() != reflect.Struct {
-		return nil
+	if root == nil {
+		root = &oi
 	}
 
+	if oi.Kind() != reflect.Struct {
+		return false, nil
+	}
+
+	hasTag := false
 	for i := 0; i < ot.NumField(); i++ {
+		indexPath := make([]int, len(baseIndexPath))
+		copy(indexPath, baseIndexPath)
+		indexPath = append(indexPath, i)
+
 		var (
 			fieldType   = ot.Field(i)
-			fieldValue  = oi.Field(i)
+			fieldValue  = (*root).FieldByIndex(indexPath)
 			serviceTag  = fieldType.Tag.Get(serviceTag)
 			optionalTag = fieldType.Tag.Get(optionalTag)
 		)
+
+		if fieldType.Anonymous {
+			wasZeroValue := false
+			if !reflect.Indirect(fieldValue).IsValid() {
+				initializedValue := reflect.New(fieldType.Type.Elem())
+				fieldValue.Set(initializedValue)
+				fieldValue = initializedValue
+				wasZeroValue = true
+			}
+
+			anonymousFieldHasTag, err := c.inject(fieldValue.Interface(), root, indexPath)
+			if err != nil {
+				return false, err
+			}
+
+			if anonymousFieldHasTag {
+				hasTag = true
+			} else if wasZeroValue {
+				zeroValue := reflect.Zero(fieldType.Type)
+				fieldValue = (*root).FieldByIndex(indexPath)
+				fieldValue.Set(zeroValue)
+			}
+
+			continue
+		}
 
 		if serviceTag == "" {
 			continue
 		}
 
+		hasTag = true
+
 		if err := loadServiceField(c, fieldType, fieldValue, serviceTag, optionalTag); err != nil {
-			return err
+			return false, err
 		}
 	}
 
 	if pi, ok := obj.(PostInject); ok {
-		return pi.PostInject()
+		if err := pi.PostInject(); err != nil {
+			return false, err
+		}
 	}
 
-	return nil
+	return hasTag, nil
 }
 
 func loadServiceField(container *serviceContainer, fieldType reflect.StructField, fieldValue reflect.Value, serviceTag, optionalTag string) error {
