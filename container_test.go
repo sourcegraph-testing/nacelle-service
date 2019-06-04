@@ -1,4 +1,4 @@
-package bussard
+package service
 
 import (
 	"fmt"
@@ -110,7 +110,7 @@ func (s *ContainerSuite) TestInjectBadType(t sweet.T) {
 	container.Set("value", &FloatWrapper{3.14})
 	obj := &TestSimpleProcess{}
 	err := container.Inject(obj)
-	Expect(err).To(MatchError("field 'Value' cannot be assigned a value of type *bussard.FloatWrapper"))
+	Expect(err).To(MatchError("field 'Value' cannot be assigned a value of type *service.FloatWrapper"))
 }
 
 func (s *ContainerSuite) TestInjectNil(t sweet.T) {

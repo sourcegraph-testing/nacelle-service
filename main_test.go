@@ -1,4 +1,4 @@
-package bussard
+package service
 
 import (
 	"testing"
