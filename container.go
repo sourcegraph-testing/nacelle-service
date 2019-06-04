@@ -132,6 +132,10 @@ func (c *serviceContainer) inject(obj interface{}, root *reflect.Value, baseInde
 		)
 
 		if fieldType.Anonymous {
+			if !fieldValue.CanSet() {
+				continue
+			}
+
 			wasZeroValue := false
 			if !reflect.Indirect(fieldValue).IsValid() {
 				initializedValue := reflect.New(fieldType.Type.Elem())

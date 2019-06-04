@@ -91,6 +91,15 @@ func (s *ContainerSuite) TestInjectAnonymousZeroValueNoServiceTags(t sweet.T) {
 	Expect(obj.IntWrapper).To(BeNil())
 }
 
+func (s *ContainerSuite) TestInjectAnonymousUnexported(t sweet.T) {
+	container := NewServiceContainer()
+	container.Set("value", &IntWrapper{42})
+	obj := &TestAnonymousUnexportedProcess{&privateProcess{}}
+	err := container.Inject(obj)
+	Expect(err).To(BeNil())
+	Expect(obj.privateProcess.Value).To(BeNil())
+}
+
 func (s *ContainerSuite) TestInjectNonStruct(t sweet.T) {
 	container := NewServiceContainer()
 	obj := func() error { return nil }
@@ -241,6 +250,14 @@ type (
 
 	TestAnonymousNoServiceTags struct {
 		*IntWrapper
+	}
+
+	TestAnonymousUnexportedProcess struct {
+		*privateProcess
+	}
+
+	privateProcess struct {
+		Value *IntWrapper `service:"value"`
 	}
 
 	TestUnsettableService struct {
