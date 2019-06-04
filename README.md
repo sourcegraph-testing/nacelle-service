@@ -1,6 +1,6 @@
 # Bussard
 
-[![GoDoc](https://godoc.org/github.com/efritz/bussard?status.svg)](https://godoc.org/github.com/efritz/bussard)
+[![GoDoc](https://godoc.org/github.com/go-nacelle/service?status.svg)](https://godoc.org/github.com/go-nacelle/service)
 [![Build Status](https://secure.travis-ci.org/efritz/bussard.png)](http://travis-ci.org/efritz/bussard)
 [![Maintainability](https://api.codeclimate.com/v1/badges/5f7ceba80716e77fe9fe/maintainability)](https://codeclimate.com/github/efritz/bussard/maintainability)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/5f7ceba80716e77fe9fe/test_coverage)](https://codeclimate.com/github/efritz/bussard/test_coverage)

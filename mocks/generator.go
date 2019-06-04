@@ -1,3 +1,3 @@
 package mocks
 
-//go:generate go-mockgen -f github.com/efritz/bussard
+//go:generate go-mockgen -f github.com/go-nacelle/service
