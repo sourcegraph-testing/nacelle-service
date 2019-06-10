@@ -1,9 +1,12 @@
 # Bussard
 
 [![GoDoc](https://godoc.org/github.com/go-nacelle/service?status.svg)](https://godoc.org/github.com/go-nacelle/service)
-[![Build Status](https://secure.travis-ci.org/efritz/bussard.png)](http://travis-ci.org/efritz/bussard)
-[![Maintainability](https://api.codeclimate.com/v1/badges/5f7ceba80716e77fe9fe/maintainability)](https://codeclimate.com/github/efritz/bussard/maintainability)
-[![Test Coverage](https://api.codeclimate.com/v1/badges/5f7ceba80716e77fe9fe/test_coverage)](https://codeclimate.com/github/efritz/bussard/test_coverage)
+[![Build Status](https://secure.travis-ci.org/go-nacelle/service.png)](http://travis-ci.org/go-nacelle/service)
+[![Maintainability](https://api.codeclimate.com/v1/badges/5f7ceba80716e77fe9fe/maintainability)](https://codeclimate.com/github/go-nacelle/service/maintainability)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/5f7ceba80716e77fe9fe/test_coverage)](https://codeclimate.com/github/go-nacelle/service/test_coverage)
+
+[![CircleCI](https://circleci.com/gh/go-nacelle/service.svg?style=svg)](https://circleci.com/gh/go-nacelle/service)
+[![Coverage Status](https://coveralls.io/repos/github/go-nacelle/service/badge.svg?branch=master)](https://coveralls.io/github/go-nacelle/service?branch=master)
 
 Bussard is a service container and dependency injection tool for Golang.
 
