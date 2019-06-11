@@ -181,7 +181,7 @@ func (s *ServiceContainerSuite) TestPostInjectChain(t sweet.T) {
 
 	container.Set("value", &IntWrapper{42})
 	container.Set("process", process)
-	container.Set("container", container)
+	container.Set("services", container)
 
 	err := container.Inject(obj)
 	Expect(err).To(BeNil())
@@ -284,7 +284,7 @@ type (
 	ErrorPostInjectProcess struct{}
 
 	RootInjectProcess struct {
-		Services ServiceContainer         `service:"container"`
+		Services ServiceContainer         `service:"services"`
 		Child    *SimplePostInjectProcess `service:"process"`
 	}
 )
