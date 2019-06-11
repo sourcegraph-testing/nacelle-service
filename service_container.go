@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"sync"
 )
 
 type (
@@ -40,6 +41,7 @@ type (
 
 	serviceContainer struct {
 		services map[string]interface{}
+		mutex    sync.RWMutex
 	}
 )
 
@@ -58,6 +60,9 @@ func NewServiceContainer() ServiceContainer {
 // Get retrieves the service registered to the given key. It is an
 // error for a service not to be registered to this key.
 func (c *serviceContainer) Get(key string) (interface{}, error) {
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
+
 	service, ok := c.services[key]
 	if !ok {
 		return nil, fmt.Errorf("no service registered to key `%s`", key)
@@ -79,6 +84,9 @@ func (c *serviceContainer) MustGet(service string) interface{} {
 // Set registers a service with the given key. It is an error for
 // a service to already be registered to this key.
 func (c *serviceContainer) Set(key string, service interface{}) error {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
 	if _, ok := c.services[key]; ok {
 		return fmt.Errorf("duplicate service key `%s`", key)
 	}
