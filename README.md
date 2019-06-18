@@ -4,7 +4,7 @@ Service container and dependency injection for [nacelle](https://github.com/go-n
 
 ---
 
-A **service** is a value that can injected into one or more structs. Generally, a service is going to be somethng that controls access to shared state (e.g. a database connection or in-memory cache). A **service container** is a collection of named services. Services are registered into a container and then the container is used to injected services into consumer objects.
+A **service** is a value that can injected into one or more structs. Generally, a service is going to be something that controls access to shared state (e.g. a database connection or in-memory cache). A **service container** is a collection of named services. Services are registered into a container and then the container is used to injected services into consumer objects.
 
 ### Usage
 
