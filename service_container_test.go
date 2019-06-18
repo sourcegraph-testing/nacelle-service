@@ -171,7 +171,7 @@ func (s *ServiceContainerSuite) TestPostInjectError(t sweet.T) {
 	obj := &ErrorPostInjectProcess{}
 	container.Set("value", &IntWrapper{42})
 	err := container.Inject(obj)
-	Expect(err).To(MatchError("utoh"))
+	Expect(err).To(MatchError("oops"))
 }
 
 func (s *ServiceContainerSuite) TestPostInjectChain(t sweet.T) {
@@ -298,7 +298,7 @@ func (p *SimplePostInjectProcess) PostInject() error {
 }
 
 func (p *ErrorPostInjectProcess) PostInject() error {
-	return fmt.Errorf("utoh")
+	return fmt.Errorf("oops")
 }
 
 func (p *RootInjectProcess) PostInject() error {
