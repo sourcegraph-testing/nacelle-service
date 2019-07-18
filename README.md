@@ -37,7 +37,7 @@ if err := container.Inject(consumer); err != nil {
 }
 ```
 
-The `Inject` method fails when a consumer asks for an unregistered service or for a service with the wrong target type. Services can be tagged as optional (e.g. `service:"example" optional:"true"`) which will silence the later kind of error. Tagged fields must be exported in order for this library to assign to them.
+The `Inject` method fails when a consumer asks for an unregistered service or for a service with the wrong target type. Services can be tagged as optional (e.g. `service:"example" optional:"true"`) which will silence the later kind of error. Tagged fields must be exported.
 
 ### Post Injection Hook
 
