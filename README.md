@@ -4,27 +4,32 @@ Service container and dependency injection for [nacelle](https://nacelle.dev).
 
 ---
 
-A **service** is a value that can injected into one or more structs. Generally, a service is going to be something that controls access to shared state (e.g. a database connection or in-memory cache). A **service container** is a collection of named services. Services are registered into a container and then the container is used to injected services into consumer objects.
+A **service container** is a collection of objects which are constructed separately from their consumers. This pattern allows for a greater separation of concerns, where consumers care only about a particular concrete or interface type, but do not care about their configuration, construction, or initialization. This separation also allows multiple consumers for the same service which does not need to be initialized multiple times (e.g. a database connection or an in-memory cache layer). Service injection is performed on [initializers and processes](https://nacelle.dev/docs/core/process) during application startup automatically.
 
-### Usage
+You can see an additional example of service injection in the [example repository](https://github.com/go-nacelle/example), specifically the [worker spec](https://github.com/go-nacelle/example/blob/843979aaa86786784a1ca3646e8d0d1f69e29c65/cmd/worker/worker_spec.go#L15) definition. In this project, the `Conn` and `PubSubConn` services are created by application-defined initializers [here](https://github.com/go-nacelle/example/blob/843979aaa86786784a1ca3646e8d0d1f69e29c65/internal/redis_initializer.go#L28) and [here](https://github.com/go-nacelle/example/blob/843979aaa86786784a1ca3646e8d0d1f69e29c65/internal/pubsub_initializer.go#L32).
 
-Basic usage is a generic key-value store. Once a service container is created, its `Get` and `Set` method can be used to retrieve and register services by name, respectively.
+### Registration
+
+A concrete service can be registered to the service container with a unique name by which it can later be retrieved. The `Set` method fails when a service name is reused. There is also an analogous `MustSet` method that panics on error.
 
 ```go
-services := NewServiceContainer()
-if err := services.Set("example", &SomeService{}); err != nil {
-    // handle error
-}
+func Init(services nacelle.ServiceContainer) error {
+    example := &Example{}
+    if err := services.Set("example", example); err != nil {
+        return err
+    }
 
-service, err : services.Get("example").(*SomeService)
-if err != nil {
-    // handle error
+    // ...
 }
 ```
 
-The `Get` method fails when no such service is registered, and the `Set` method fails when a service name is reused. The `Get` and `Set` methods have analogous `MustGet` and `MustSet` methods which panic on error.
+The [logger](https://nacelle.dev/docs/core/log) (under the name `logger`), the [health tracker](https://nacelle.dev/docs/core/process#tracking-process-health) (under the name `health`), and the service container itself (under the name `services`) are available in all applications using the nacelle [bootstrapper](https://nacelle.dev/docs/core).
 
-The `Get` method returns a bare interface object, as the service container holds services of heterogeneous type. The standard usage of a service container is to **inject** service instances into tagged structs, which does type conversions for you.
+### Retrieval
+
+A service can be retrieved from the service container by the name with which it is registered. However, this returns a bare interface object and requires the consumer of the service to do a type-check and cast.
+
+Instead, the recommended way to consume dependent services is to **inject** them into a struct decorated with tagged fields. This does the proper type conversion for you.
 
 ```go
 type Consumer struct {
@@ -32,16 +37,16 @@ type Consumer struct {
 }
 
 consumer := &Consumer{}
-if err := container.Inject(consumer); err != nil {
+if err := services.Inject(consumer); err != nil {
     // handle error
 }
 ```
 
-The `Inject` method fails when a consumer asks for an unregistered service or for a service with the wrong target type. Services can be tagged as optional (e.g. `service:"example" optional:"true"`) which will silence the later kind of error. Tagged fields must be exported.
+The `Inject` method fails when a consumer asks for an unregistered service or for a service with the wrong target type. Services can be tagged as optional (e.g. `service:"example" optional:"true"`) which will silence the later class of errors. Tagged fields must be exported.
 
-### Post Injection Hook
+#### Post Injection Hook
 
-After successful injection to a struct, the method named `PostInject` will be called if it is defined. This allows initialization behavior that relies on the presence of injected services to be run as soon as possible.
+If additional behavior is necessary after services are available to a consumer struct (e.g. running injection on the elements of a dynamic slice or map or cross-linking dependencies), the method `PostInject` can be implemented. This method, if it is defined, is invoked immediately after successful injection.
 
 ```go
 func (c *Consumer) PostInject() error {
@@ -49,7 +54,7 @@ func (c *Consumer) PostInject() error {
 }
 ```
 
-### Anonymous Structs
+#### Anonymous Structs
 
 Injection also works on structs containing composite fields. The following example successfully assigns the registered value to the field `Child.Base.Service`.
 
@@ -68,9 +73,9 @@ if err := container.Inject(child); err != nil {
 }
 ```
 
-### Recursive Injection
+#### Recursive Injection
 
-It should be noted that injection does not work **recursively** -- the procedure does not look into the values of non-anonymous fields. If this behavior is needed, it can be performed during a post-injection hook. The following example demonstrates this behavior and assumes that the service container is registered to itself under the name `services`.
+It should be noted that injection does not work **recursively**. The procedure does not look into the values of non-anonymous fields. If this behavior is needed, it can be performed during a post-injection hook. The following example demonstrates this behavior.
 
 ```go
 type RecursiveInjectionConsumer struct {
@@ -81,7 +86,13 @@ type RecursiveInjectionConsumer struct {
 }
 
 func (c *RecursiveInjectionConsumer) PostInject() error {
-    for _, field := range []interface{}{c.FieldA, c.FieldB, c.FieldC} {
+    fields := []interface{}{
+        c.FieldA,
+        c.FieldB,
+        c.FieldC,
+    }
+
+    for _, field := range fields {
         if err := c.Services.Inject(field); err != nil {
             return err
         }
