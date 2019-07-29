@@ -7,7 +7,7 @@ executors:
     working_directory: ~/service
 
 jobs:
-  build:
+  test:
     executor: go
     steps:
       - checkout
@@ -56,10 +56,10 @@ jobs:
 
 workflows:
   version: 2
-  build_and_test:
+  test_and_udpate_Docs:
     jobs:
-      - build
-      - deploy:
+      - test
+      - update_docs:
           filters:
             branches:
               only: master
