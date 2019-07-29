@@ -29,7 +29,7 @@ jobs:
             # Download hub utility and put it in PATH
             curl -L -o hub.tar.gz "https://github.com/github/hub/releases/download/v${version}/${dir}.tgz"
             tar -xvzf hub.tar.gz "${dir}/bin/hub"
-            mv "${dir}/bin/hub" /usr/local/bin/hub
+            sudo mv "${dir}/bin/hub" /usr/local/bin/hub
             rm -rf hub.tar.gz ${dir}
       - run:
           command: |
