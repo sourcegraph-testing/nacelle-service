@@ -17,6 +17,9 @@ jobs:
             go get ./...
             goveralls -covermode=atomic -package=./... -race -service=circle-ci -v
   update_docs:
+    docker:
+      - image: circleci/golang:1.12
+    working_directory: ~/service
     steps:
       - docs/update_docs:
           repo: service
