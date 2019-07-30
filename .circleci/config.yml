@@ -38,7 +38,7 @@ jobs:
             message="Sync documentation from go-nacelle/${repo}."
 
             # Clone website and update related docs
-            hub clone go-nacelle/website.git
+            hub clone go-nacelle/website
             cd website
             ./bin/update-repos.sh "${repo}"
 
