@@ -36,6 +36,7 @@ jobs:
             repo="service"
             branch="sync-service-${CIRCLE_SHA1:0:6}"
             message="Sync documentation from go-nacelle/${repo}."
+            git config --global hub.protocol https
 
             # Clone website and update related docs
             hub clone go-nacelle/website
