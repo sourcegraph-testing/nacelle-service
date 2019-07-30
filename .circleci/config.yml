@@ -41,7 +41,7 @@ jobs:
             # Clone website and update related docs
             hub clone go-nacelle/website
             cd website
-            ./bin/update-repos.sh "${repo}"
+            ./bin/sync-repos.sh "${repo}"
 
             # See if docs have changed from master. If not,
             # there's nothing to create a PR for.
