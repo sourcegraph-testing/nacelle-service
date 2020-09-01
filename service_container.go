@@ -107,11 +107,11 @@ func (c *serviceContainer) MustSet(service string, value interface{}) {
 // may occur if a service has not been registered, a service has a
 // different type than expected, or struct tags are malformed.
 func (c *serviceContainer) Inject(obj interface{}) error {
-	_, err := c.inject(obj, nil, nil)
+	_, err := inject(c, obj, nil, nil)
 	return err
 }
 
-func (c *serviceContainer) inject(obj interface{}, root *reflect.Value, baseIndexPath []int) (bool, error) {
+func inject(c *serviceContainer, obj interface{}, root *reflect.Value, baseIndexPath []int) (bool, error) {
 	var (
 		ov = reflect.ValueOf(obj)
 		oi = reflect.Indirect(ov)
@@ -152,7 +152,7 @@ func (c *serviceContainer) inject(obj interface{}, root *reflect.Value, baseInde
 				wasZeroValue = true
 			}
 
-			anonymousFieldHasTag, err := c.inject(fieldValue.Interface(), root, indexPath)
+			anonymousFieldHasTag, err := inject(c, fieldValue.Interface(), root, indexPath)
 			if err != nil {
 				return false, err
 			}
