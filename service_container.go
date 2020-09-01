@@ -31,6 +31,14 @@ type (
 		Inject(obj interface{}) error
 	}
 
+	// ServiceGetter is a subset of a ServiceContainer that only supports the
+	// retrieval of a registered service by name.
+	ServiceGetter interface {
+		// Get retrieves the service registered to the given key. It is an
+		// error for a service not to be registered to this key.
+		Get(key string) (interface{}, error)
+	}
+
 	// PostInject is a marker interface for injectable objects which should
 	// perform some action after injection of services.
 	PostInject interface {

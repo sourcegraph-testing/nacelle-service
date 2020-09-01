@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-func inject(c *serviceContainer, obj interface{}, root *reflect.Value, baseIndexPath []int) (bool, error) {
+func inject(c ServiceGetter, obj interface{}, root *reflect.Value, baseIndexPath []int) (bool, error) {
 	var (
 		ov = reflect.ValueOf(obj)
 		oi = reflect.Indirect(ov)
@@ -83,7 +83,7 @@ func inject(c *serviceContainer, obj interface{}, root *reflect.Value, baseIndex
 	return hasTag, nil
 }
 
-func loadServiceField(container *serviceContainer, fieldType reflect.StructField, fieldValue reflect.Value, serviceTag, optionalTag string) error {
+func loadServiceField(container ServiceGetter, fieldType reflect.StructField, fieldValue reflect.Value, serviceTag, optionalTag string) error {
 	if !fieldValue.IsValid() {
 		return fmt.Errorf("field '%s' is invalid", fieldType.Name)
 	}
