@@ -15,5 +15,6 @@ func TestMain(m *testing.M) {
 		s.RegisterPlugin(junit.NewPlugin())
 
 		s.AddSuite(&ServiceContainerSuite{})
+		s.AddSuite(&OverlayContainerSuite{})
 	})
 }
