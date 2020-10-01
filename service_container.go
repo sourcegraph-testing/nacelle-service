@@ -5,37 +5,35 @@ import (
 	"sync"
 )
 
-type (
-	// ServiceContainer is a wrapper around services indexed by a unique
-	// name. Services can be retrieved by name, or injected into a struct
-	// by reading tagged fields.
-	ServiceContainer interface {
-		// Get retrieves the service registered to the given key. It is an
-		// error for a service not to be registered to this key.
-		Get(key string) (interface{}, error)
+// ServiceContainer is a wrapper around services indexed by a unique
+// name. Services can be retrieved by name, or injected into a struct
+// by reading tagged fields.
+type ServiceContainer interface {
+	// Get retrieves the service registered to the given key. It is an
+	// error for a service not to be registered to this key.
+	Get(key string) (interface{}, error)
 
-		// MustGet calls Get and panics on error.
-		MustGet(service string) interface{}
+	// MustGet calls Get and panics on error.
+	MustGet(service string) interface{}
 
-		// Set registers a service with the given key. It is an error for
-		// a service to already be registered to this key.
-		Set(key string, service interface{}) error
+	// Set registers a service with the given key. It is an error for
+	// a service to already be registered to this key.
+	Set(key string, service interface{}) error
 
-		// MustSet calls Set and panics on error.
-		MustSet(service string, value interface{})
+	// MustSet calls Set and panics on error.
+	MustSet(service string, value interface{})
 
-		// Inject will attempt to populate the given type with values from
-		// the service container based on the value's struct tags. An error
-		// may occur if a service has not been registered, a service has a
-		// different type than expected, or struct tags are malformed.
-		Inject(obj interface{}) error
-	}
+	// Inject will attempt to populate the given type with values from
+	// the service container based on the value's struct tags. An error
+	// may occur if a service has not been registered, a service has a
+	// different type than expected, or struct tags are malformed.
+	Inject(obj interface{}) error
+}
 
-	serviceContainer struct {
-		services map[string]interface{}
-		mutex    sync.RWMutex
-	}
-)
+type serviceContainer struct {
+	services map[string]interface{}
+	mutex    sync.RWMutex
+}
 
 // NewServiceContainer creates an empty service container.
 func NewServiceContainer() ServiceContainer {

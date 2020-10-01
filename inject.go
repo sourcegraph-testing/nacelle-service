@@ -6,21 +6,19 @@ import (
 	"strconv"
 )
 
-type (
-	// ServiceGetter is a subset of a ServiceContainer that only supports the
-	// retrieval of a registered service by name.
-	ServiceGetter interface {
-		// Get retrieves the service registered to the given key. It is an
-		// error for a service not to be registered to this key.
-		Get(key string) (interface{}, error)
-	}
+// ServiceGetter is a subset of a ServiceContainer that only supports the
+// retrieval of a registered service by name.
+type ServiceGetter interface {
+	// Get retrieves the service registered to the given key. It is an
+	// error for a service not to be registered to this key.
+	Get(key string) (interface{}, error)
+}
 
-	// PostInject is a marker interface for injectable objects which should
-	// perform some action after injection of services.
-	PostInject interface {
-		PostInject() error
-	}
-)
+// PostInject is a marker interface for injectable objects which should
+// perform some action after injection of services.
+type PostInject interface {
+	PostInject() error
+}
 
 const (
 	serviceTag  = "service"
@@ -28,11 +26,9 @@ const (
 )
 
 func inject(c ServiceGetter, obj interface{}, root *reflect.Value, baseIndexPath []int) (bool, error) {
-	var (
-		ov = reflect.ValueOf(obj)
-		oi = reflect.Indirect(ov)
-		ot = oi.Type()
-	)
+	ov := reflect.ValueOf(obj)
+	oi := reflect.Indirect(ov)
+	ot := oi.Type()
 
 	if root == nil {
 		root = &oi
@@ -48,12 +44,10 @@ func inject(c ServiceGetter, obj interface{}, root *reflect.Value, baseIndexPath
 		copy(indexPath, baseIndexPath)
 		indexPath = append(indexPath, i)
 
-		var (
-			fieldType   = ot.Field(i)
-			fieldValue  = (*root).FieldByIndex(indexPath)
-			serviceTag  = fieldType.Tag.Get(serviceTag)
-			optionalTag = fieldType.Tag.Get(optionalTag)
-		)
+		fieldType := ot.Field(i)
+		fieldValue := (*root).FieldByIndex(indexPath)
+		serviceTag := fieldType.Tag.Get(serviceTag)
+		optionalTag := fieldType.Tag.Get(optionalTag)
 
 		if fieldType.Anonymous {
 			if !fieldValue.CanSet() {
@@ -129,10 +123,8 @@ func loadServiceField(container ServiceGetter, fieldType reflect.StructField, fi
 		return err
 	}
 
-	var (
-		targetType  = fieldValue.Type()
-		targetValue = reflect.ValueOf(value)
-	)
+	targetType := fieldValue.Type()
+	targetValue := reflect.ValueOf(value)
 
 	if !targetValue.IsValid() || !targetValue.Type().ConvertibleTo(targetType) {
 		return fmt.Errorf(

@@ -1,68 +1,70 @@
 package service
 
 import (
-	"github.com/aphistic/sweet"
-	. "github.com/onsi/gomega"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-type OverlayContainerSuite struct{}
+func TestOverlayContainerGet(t *testing.T) {
+	type T struct {
+		val int
+	}
 
-func (s *OverlayContainerSuite) TestGet(t sweet.T) {
 	container := NewServiceContainer()
-	container.Set("a", &IntWrapper{10})
-	container.Set("b", &IntWrapper{20})
-	container.Set("c", &IntWrapper{30})
+	container.Set("a", &T{10})
+	container.Set("b", &T{20})
+	container.Set("c", &T{30})
 
 	overlay := Overlay(container, map[string]interface{}{
-		"a": &IntWrapper{40},
-		"d": &IntWrapper{50},
+		"a": &T{40},
+		"d": &T{50},
 	})
 
 	value1, err1 := overlay.Get("a")
-	Expect(err1).To(BeNil())
-	Expect(value1).To(Equal(&IntWrapper{40}))
+	require.Nil(t, err1)
+	assert.Equal(t, &T{40}, value1)
 
 	value2, err2 := overlay.Get("b")
-	Expect(err2).To(BeNil())
-	Expect(value2).To(Equal(&IntWrapper{20}))
+	require.Nil(t, err2)
+	assert.Equal(t, &T{20}, value2)
 
 	value3, err3 := overlay.Get("c")
-	Expect(err3).To(BeNil())
-	Expect(value3).To(Equal(&IntWrapper{30}))
+	require.Nil(t, err3)
+	assert.Equal(t, &T{30}, value3)
 
 	value4, err4 := overlay.Get("d")
-	Expect(err4).To(BeNil())
-	Expect(value4).To(Equal(&IntWrapper{50}))
+	require.Nil(t, err4)
+	assert.Equal(t, &T{50}, value4)
 }
 
-func (s *OverlayContainerSuite) TestInject(t sweet.T) {
+func TestOverlayContainerInject(t *testing.T) {
+	type T1 struct {
+		val int
+	}
+	type T2 struct {
+		A *T1 `service:"a"`
+		B *T1 `service:"b"`
+		C *T1 `service:"c"`
+		D *T1 `service:"d"`
+	}
+
 	container := NewServiceContainer()
-	container.Set("a", &IntWrapper{10})
-	container.Set("b", &IntWrapper{20})
-	container.Set("c", &IntWrapper{30})
+	container.Set("a", &T1{10})
+	container.Set("b", &T1{20})
+	container.Set("c", &T1{30})
 
 	overlay := Overlay(container, map[string]interface{}{
-		"a": &IntWrapper{40},
-		"d": &IntWrapper{50},
+		"a": &T1{40},
+		"d": &T1{50},
 	})
 
-	obj := &TestOverlayProcess{}
+	obj := &T2{}
 	err := overlay.Inject(obj)
-	Expect(err).To(BeNil())
-	Expect(obj.A.val).To(Equal(40))
-	Expect(obj.B.val).To(Equal(20))
-	Expect(obj.C.val).To(Equal(30))
-	Expect(obj.D.val).To(Equal(50))
+	require.Nil(t, err)
+	assert.Equal(t, 40, obj.A.val)
+	assert.Equal(t, 20, obj.B.val)
+	assert.Equal(t, 30, obj.C.val)
+	assert.Equal(t, 50, obj.D.val)
 }
-
-//
-// Fixtures
-
-type (
-	TestOverlayProcess struct {
-		A *IntWrapper `service:"a"`
-		B *IntWrapper `service:"b"`
-		C *IntWrapper `service:"c"`
-		D *IntWrapper `service:"d"`
-	}
-)
