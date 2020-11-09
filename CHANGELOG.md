@@ -18,7 +18,7 @@
 
 ### Changed
 
-- Migrated from [efritz/bussard]https://github.com/efritz/bussard).
+- Migrated from [efritz/bussard](https://github.com/efritz/bussard).
 
 [Unreleased]: https://github.com/go-nacelle/service/compare/v1.0.2...HEAD
 [v1.0.0]: https://github.com/go-nacelle/service/releases/tag/v1.0.0
