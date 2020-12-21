@@ -6,16 +6,16 @@ type overlayContainer struct {
 }
 
 // Overlay wraps the given service container with an immutable map of
-// services. Calling Get or MustGet on the resulting service container
-// will return a service from the overlay map, then will fall back to
-// the wrapped service container. Similarly, Inject will favor services
-// from the overlay map.
+// services. Calling Get on the resulting service container will return
+// a service from the overlay map, then will fall back to the wrapped
+// service container. Similarly, Inject will favor services from the
+// overlay map.
 //
 // This allows a user to re-assign services in the container for a specific
 // specialized code path. This can be used, for example, to inject a logger
 // with context for the current request or task to a short-lived handler.
 //
-// Calling Set or MustSet will modify the wrapped container directly.
+// Calling Set will modify the wrapped container directly.
 func Overlay(base ServiceContainer, services map[interface{}]interface{}) ServiceContainer {
 	return &overlayContainer{
 		base:     base,
@@ -33,25 +33,10 @@ func (c *overlayContainer) Get(key interface{}) (interface{}, error) {
 	return c.base.Get(key)
 }
 
-// MustGet calls Get and panics on error.
-func (c *overlayContainer) MustGet(service interface{}) interface{} {
-	value, err := c.Get(service)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	return value
-}
-
 // Set registers a service with the given key. It is an error for
 // a service to already be registered to this key.
 func (c *overlayContainer) Set(key interface{}, service interface{}) error {
 	return c.base.Set(key, service)
-}
-
-// MustSet calls Set and panics on error.
-func (c *overlayContainer) MustSet(service interface{}, value interface{}) {
-	c.base.MustSet(service, value)
 }
 
 // Inject will attempt to populate the given type with values from
