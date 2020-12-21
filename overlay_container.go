@@ -2,7 +2,7 @@ package service
 
 type overlayContainer struct {
 	base     ServiceContainer
-	services map[string]interface{}
+	services map[interface{}]interface{}
 }
 
 // Overlay wraps the given service container with an immutable map of
@@ -16,7 +16,7 @@ type overlayContainer struct {
 // with context for the current request or task to a short-lived handler.
 //
 // Calling Set or MustSet will modify the wrapped container directly.
-func Overlay(base ServiceContainer, services map[string]interface{}) ServiceContainer {
+func Overlay(base ServiceContainer, services map[interface{}]interface{}) ServiceContainer {
 	return &overlayContainer{
 		base:     base,
 		services: services,
@@ -25,7 +25,7 @@ func Overlay(base ServiceContainer, services map[string]interface{}) ServiceCont
 
 // Get retrieves the service registered to the given key. It is an
 // error for a service not to be registered to this key.
-func (c *overlayContainer) Get(key string) (interface{}, error) {
+func (c *overlayContainer) Get(key interface{}) (interface{}, error) {
 	if service, ok := c.services[key]; ok {
 		return service, nil
 	}
@@ -34,7 +34,7 @@ func (c *overlayContainer) Get(key string) (interface{}, error) {
 }
 
 // MustGet calls Get and panics on error.
-func (c *overlayContainer) MustGet(service string) interface{} {
+func (c *overlayContainer) MustGet(service interface{}) interface{} {
 	value, err := c.Get(service)
 	if err != nil {
 		panic(err.Error())
@@ -45,12 +45,12 @@ func (c *overlayContainer) MustGet(service string) interface{} {
 
 // Set registers a service with the given key. It is an error for
 // a service to already be registered to this key.
-func (c *overlayContainer) Set(key string, service interface{}) error {
+func (c *overlayContainer) Set(key interface{}, service interface{}) error {
 	return c.base.Set(key, service)
 }
 
 // MustSet calls Set and panics on error.
-func (c *overlayContainer) MustSet(service string, value interface{}) {
+func (c *overlayContainer) MustSet(service interface{}, value interface{}) {
 	c.base.MustSet(service, value)
 }
 

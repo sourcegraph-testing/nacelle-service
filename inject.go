@@ -11,7 +11,7 @@ import (
 type ServiceGetter interface {
 	// Get retrieves the service registered to the given key. It is an
 	// error for a service not to be registered to this key.
-	Get(key string) (interface{}, error)
+	Get(key interface{}) (interface{}, error)
 }
 
 // PostInject is a marker interface for injectable objects which should

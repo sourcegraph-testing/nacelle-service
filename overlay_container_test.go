@@ -17,7 +17,7 @@ func TestOverlayContainerGet(t *testing.T) {
 	container.Set("b", &T{20})
 	container.Set("c", &T{30})
 
-	overlay := Overlay(container, map[string]interface{}{
+	overlay := Overlay(container, map[interface{}]interface{}{
 		"a": &T{40},
 		"d": &T{50},
 	})
@@ -55,7 +55,7 @@ func TestOverlayContainerInject(t *testing.T) {
 	container.Set("b", &T1{20})
 	container.Set("c", &T1{30})
 
-	overlay := Overlay(container, map[string]interface{}{
+	overlay := Overlay(container, map[interface{}]interface{}{
 		"a": &T1{40},
 		"d": &T1{50},
 	})

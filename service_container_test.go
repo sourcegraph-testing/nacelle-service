@@ -146,7 +146,7 @@ func TestServiceContainerInjectMissingService(t *testing.T) {
 	container := NewServiceContainer()
 	obj := &T2{}
 	err := container.Inject(obj)
-	assert.EqualError(t, err, "no service registered to key `value`")
+	assert.EqualError(t, err, `no service registered to key "value"`)
 }
 
 func TestServiceContainerInjectBadType(t *testing.T) {
@@ -281,13 +281,13 @@ func TestServiceContainerDuplicateRegistration(t *testing.T) {
 	err1 := container.Set("dup", struct{}{})
 	err2 := container.Set("dup", struct{}{})
 	require.Nil(t, err1)
-	assert.EqualError(t, err2, "duplicate service key `dup`")
+	assert.EqualError(t, err2, `duplicate service key "dup"`)
 }
 
 func TestServiceContainerGetUnregisteredKey(t *testing.T) {
 	container := NewServiceContainer()
 	_, err := container.Get("unregistered")
-	assert.EqualError(t, err, "no service registered to key `unregistered`")
+	assert.EqualError(t, err, `no service registered to key "unregistered"`)
 }
 
 func TestServiceContainerMustSetPanics(t *testing.T) {
@@ -302,4 +302,97 @@ func TestServiceContainerMustGetPanics(t *testing.T) {
 	assert.Panics(t, func() {
 		NewServiceContainer().MustGet("unregistered")
 	})
+}
+
+func TestServiceContainerNonStringKeys(t *testing.T) {
+	container := NewServiceContainer()
+
+	type testServiceKey1 struct{}
+	k1 := testServiceKey1{}
+	err1 := container.Set(k1, 41)
+	assert.Nil(t, err1)
+	v1, err1 := container.Get(k1)
+	assert.Nil(t, err1)
+	assert.Equal(t, 41, v1)
+
+	type testServiceKey2 struct{}
+	k2 := testServiceKey2{}
+	err2 := container.Set(k2, 42)
+	assert.Nil(t, err2)
+	v2, err1 := container.Get(k2)
+	assert.Nil(t, err2)
+	assert.Equal(t, 42, v2)
+
+	type testServiceKey3 struct{}
+	k3 := testServiceKey3{}
+	err3 := container.Set(k3, 43)
+	assert.Nil(t, err3)
+	v3, err1 := container.Get(k3)
+	assert.Nil(t, err3)
+	assert.Equal(t, 43, v3)
+}
+
+func TestServiceContainerDuplicateNonStringKey(t *testing.T) {
+	type testServiceKey struct{}
+	k1 := testServiceKey{}
+	k2 := testServiceKey{}
+
+	container := NewServiceContainer()
+	err1 := container.Set(k1, 41)
+	err2 := container.Set(k2, 42)
+	assert.Nil(t, err1)
+	assert.EqualError(t, err2, `duplicate service key testServiceKey`)
+}
+
+type testInjectableServiceKey1 struct{}
+type testInjectableServiceKey2 struct{}
+type testInjectableServiceKey3 struct{}
+
+func (testInjectableServiceKey1) Tag() string { return "A" }
+func (testInjectableServiceKey2) Tag() string { return "B" }
+func (testInjectableServiceKey3) Tag() string { return "B" } // duplicate
+
+func TestInjectableServiceKey(t *testing.T) {
+	container := NewServiceContainer()
+
+	k1 := testInjectableServiceKey1{}
+	err1 := container.Set(k1, 41)
+	assert.Nil(t, err1)
+	v1, err1 := container.Get(k1)
+	assert.Nil(t, err1)
+	assert.Equal(t, 41, v1)
+
+	k2 := testInjectableServiceKey2{}
+	err2 := container.Set(k2, 42)
+	assert.Nil(t, err2)
+	v2, err2 := container.Get(k2)
+	assert.Nil(t, err2)
+	assert.Equal(t, 42, v2)
+}
+
+func TestServiceContainerDuplicateTags(t *testing.T) {
+	container := NewServiceContainer()
+
+	k2 := testInjectableServiceKey2{}
+	err2 := container.Set(k2, 42)
+	assert.Nil(t, err2)
+	v2, err2 := container.Get(k2)
+	assert.Nil(t, err2)
+	assert.Equal(t, 42, v2)
+
+	k3 := testInjectableServiceKey3{}
+	err3 := container.Set(k3, 43)
+	assert.EqualError(t, err3, `duplicate service key testInjectableServiceKey3 ("B")`)
+
+	// Ensure we didn't overwrite it
+	v2, err2 = container.Get(k2)
+	assert.Nil(t, err2)
+	assert.Equal(t, 42, v2)
+}
+
+func TestPrettyServiceKey(t *testing.T) {
+	type testServiceKey1 struct{}
+	assert.Equal(t, `testServiceKey1`, prettyKey(testServiceKey1{}))
+	assert.Equal(t, `testInjectableServiceKey1 ("A")`, prettyKey(testInjectableServiceKey1{}))
+	assert.Equal(t, `"plain"`, prettyKey("plain"))
 }
