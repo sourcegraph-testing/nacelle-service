@@ -8,7 +8,8 @@
 
 ### Removed
 
-- Removed MustGet and MustSet methods from the Container interface. [#3](https://github.com/go-nacelle/service/pull/3)
+- Removed `MustGet` and `MustSet` methods from the `Container` interface. [#3](https://github.com/go-nacelle/service/pull/3)
+- Removed mocks package. [#6](https://github.com/go-nacelle/service/pull/6)
 
 ## [v1.0.2] - 2020-09-30
 
