@@ -5,6 +5,9 @@
 ### Changed
 
 - Change type of service keys from `string` to `interface{}`. [#4](https://github.com/go-nacelle/service/pull/4)
+- Replaced the `ServiceContainer` interface with `Container`, a struct with the same name and set of methods. [#7](https://github.com/go-nacelle/service/pull/7)
+- Renamed `NewServiceContainer` to `New`. [#7](https://github.com/go-nacelle/service/pull/7)
+- Renamed `Overlay` to `NewOverlay`. [#7](https://github.com/go-nacelle/service/pull/7)
 
 ### Removed
 

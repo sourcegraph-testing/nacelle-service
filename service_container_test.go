@@ -12,7 +12,7 @@ func TestServiceContainerGetAndSet(t *testing.T) {
 	type T1 struct{ val int }
 	type T2 struct{ val float64 }
 
-	container := NewServiceContainer()
+	container := New()
 	container.Set("a", &T1{10})
 	container.Set("b", &T2{3.14})
 	container.Set("c", &T1{25})
@@ -36,7 +36,7 @@ func TestServiceContainerInject(t *testing.T) {
 		Value *T1 `service:"value"`
 	}
 
-	container := NewServiceContainer()
+	container := New()
 	container.Set("value", &T1{42})
 	obj := &T2{}
 	err := container.Inject(obj)
@@ -50,7 +50,7 @@ func TestServiceContainerInjectNonPointer(t *testing.T) {
 		Value T1 `service:"value"`
 	}
 
-	container := NewServiceContainer()
+	container := New()
 	container.Set("value", T1{42})
 	obj := &T2{}
 	err := container.Inject(obj)
@@ -65,7 +65,7 @@ func TestServiceContainerInjectAnonymous(t *testing.T) {
 	}
 	type T3 struct{ *T2 }
 
-	container := NewServiceContainer()
+	container := New()
 	container.Set("value", &T1{42})
 	obj := &T3{&T2{}}
 	err := container.Inject(obj)
@@ -80,7 +80,7 @@ func TestServiceContainerInjectAnonymousZeroValue(t *testing.T) {
 	}
 	type T3 struct{ *T2 }
 
-	container := NewServiceContainer()
+	container := New()
 	container.Set("value", &T1{42})
 	obj := &T3{} // not &T3{&T2{}}
 	err := container.Inject(obj)
@@ -95,7 +95,7 @@ func TestServiceContainerInjectAnonymousNonPointer(t *testing.T) {
 	}
 	type T3 struct{ T2 }
 
-	container := NewServiceContainer()
+	container := New()
 	container.Set("value", &T1{42})
 	obj := &T3{}
 	err := container.Inject(obj)
@@ -107,7 +107,7 @@ func TestServiceContainerInjectAnonymousZeroValueNoServiceTags(t *testing.T) {
 	type T1 struct{ val int }
 	type T2 struct{ *T1 }
 
-	container := NewServiceContainer()
+	container := New()
 	container.Set("value", &T1{42})
 	obj := &T2{}
 	err := container.Inject(obj)
@@ -122,7 +122,7 @@ func TestServiceContainerInjectAnonymousUnexported(t *testing.T) {
 	}
 	type T3 struct{ *t2 }
 
-	container := NewServiceContainer()
+	container := New()
 	container.Set("value", &T1{42})
 	obj := &T3{&t2{}}
 	err := container.Inject(obj)
@@ -131,7 +131,7 @@ func TestServiceContainerInjectAnonymousUnexported(t *testing.T) {
 }
 
 func TestServiceContainerInjectNonStruct(t *testing.T) {
-	container := NewServiceContainer()
+	container := New()
 	obj := func() error { return nil }
 	err := container.Inject(obj)
 	require.Nil(t, err)
@@ -143,7 +143,7 @@ func TestServiceContainerInjectMissingService(t *testing.T) {
 		Value *T1 `service:"value"`
 	}
 
-	container := NewServiceContainer()
+	container := New()
 	obj := &T2{}
 	err := container.Inject(obj)
 	assert.EqualError(t, err, `no service registered to key "value"`)
@@ -156,7 +156,7 @@ func TestServiceContainerInjectBadType(t *testing.T) {
 	}
 	type T3 struct{ val float64 }
 
-	container := NewServiceContainer()
+	container := New()
 	container.Set("value", &T3{3.14})
 	obj := &T2{}
 	err := container.Inject(obj)
@@ -169,7 +169,7 @@ func TestServiceContainerInjectNil(t *testing.T) {
 		Value T1 `service:"value"`
 	}
 
-	container := NewServiceContainer()
+	container := New()
 	container.Set("value", nil)
 	obj := &T2{}
 	err := container.Inject(obj)
@@ -182,7 +182,7 @@ func TestServiceContainerInjectOptional(t *testing.T) {
 		Value *T1 `service:"value" optional:"true"`
 	}
 
-	container := NewServiceContainer()
+	container := New()
 	obj := &T2{}
 	err := container.Inject(obj)
 	require.Nil(t, err)
@@ -200,7 +200,7 @@ func TestServiceContainerInjectBadOptional(t *testing.T) {
 		Value *T1 `service:"value" optional:"yup"`
 	}
 
-	container := NewServiceContainer()
+	container := New()
 	obj := &T2{}
 	err := container.Inject(obj)
 	assert.EqualError(t, err, "field 'Value' has an invalid optional tag")
@@ -212,14 +212,14 @@ func TestServiceContainerUnsettableFields(t *testing.T) {
 		value *T1 `service:"value"`
 	}
 
-	container := NewServiceContainer()
+	container := New()
 	container.Set("value", &T1{42})
 	err := container.Inject(&T2{})
 	assert.EqualError(t, err, "field 'value' can not be set - it may be unexported")
 }
 
 func TestServiceContainerPostInject(t *testing.T) {
-	container := NewServiceContainer()
+	container := New()
 	obj := &testPostInjectProcess{}
 	container.Set("value", &TI{42})
 	err := container.Inject(obj)
@@ -241,7 +241,7 @@ func (p *testPostInjectProcess) PostInject() error {
 }
 
 func TestServiceContainerPostInjectChain(t *testing.T) {
-	container := NewServiceContainer()
+	container := New()
 	obj := &testPostInjectProcessParent{}
 	process := &testPostInjectProcess{}
 
@@ -255,7 +255,7 @@ func TestServiceContainerPostInjectChain(t *testing.T) {
 }
 
 type testPostInjectProcessParent struct {
-	Services ServiceContainer       `service:"services"`
+	Services *Container             `service:"services"`
 	Child    *testPostInjectProcess `service:"process"`
 }
 
@@ -264,7 +264,7 @@ func (p *testPostInjectProcessParent) PostInject() error {
 }
 
 func TestServiceContainerPostInjectError(t *testing.T) {
-	container := NewServiceContainer()
+	container := New()
 	obj := &testPostInjectProcessError{}
 	err := container.Inject(obj)
 	assert.EqualError(t, err, "oops")
@@ -277,7 +277,7 @@ func (p *testPostInjectProcessError) PostInject() error {
 }
 
 func TestServiceContainerDuplicateRegistration(t *testing.T) {
-	container := NewServiceContainer()
+	container := New()
 	err1 := container.Set("dup", struct{}{})
 	err2 := container.Set("dup", struct{}{})
 	require.Nil(t, err1)
@@ -285,7 +285,7 @@ func TestServiceContainerDuplicateRegistration(t *testing.T) {
 }
 
 func TestServiceContainerGetUnregisteredKey(t *testing.T) {
-	container := NewServiceContainer()
+	container := New()
 	_, err := container.Get("unregistered")
 	assert.EqualError(t, err, `no service registered to key "unregistered"`)
 }

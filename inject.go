@@ -6,9 +6,9 @@ import (
 	"strconv"
 )
 
-// ServiceGetter is a subset of a ServiceContainer that only supports the
+// serviceGetter is a subset of a ServiceContainer that only supports the
 // retrieval of a registered service by name.
-type ServiceGetter interface {
+type serviceGetter interface {
 	// Get retrieves the service registered to the given key. It is an
 	// error for a service not to be registered to this key.
 	Get(key interface{}) (interface{}, error)
@@ -25,7 +25,7 @@ const (
 	optionalTag = "optional"
 )
 
-func inject(c ServiceGetter, obj interface{}, root *reflect.Value, baseIndexPath []int) (bool, error) {
+func inject(c serviceGetter, obj interface{}, root *reflect.Value, baseIndexPath []int) (bool, error) {
 	ov := reflect.ValueOf(obj)
 	oi := reflect.Indirect(ov)
 	ot := oi.Type()
@@ -98,7 +98,7 @@ func inject(c ServiceGetter, obj interface{}, root *reflect.Value, baseIndexPath
 	return hasTag, nil
 }
 
-func loadServiceField(container ServiceGetter, fieldType reflect.StructField, fieldValue reflect.Value, serviceTag, optionalTag string) error {
+func loadServiceField(container serviceGetter, fieldType reflect.StructField, fieldValue reflect.Value, serviceTag, optionalTag string) error {
 	if !fieldValue.IsValid() {
 		return fmt.Errorf("field '%s' is invalid", fieldType.Name)
 	}
