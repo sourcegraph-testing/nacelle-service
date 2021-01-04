@@ -6,87 +6,43 @@ import (
 	"strconv"
 )
 
-// serviceGetter is a subset of a ServiceContainer that only supports the
-// retrieval of a registered service by name.
-type serviceGetter interface {
-	// Get retrieves the service registered to the given key. It is an
-	// error for a service not to be registered to this key.
-	Get(key interface{}) (interface{}, error)
+// Inject will attempt to populate the given type with values from the service container based on
+// the value's struct tags. An error may occur if a service has not been registered, a service has
+// a different type than expected, or struct tags are malformed.
+func Inject(c *Container, obj interface{}) error {
+	_, err := inject(c, obj, nil, nil)
+	return err
 }
 
-// PostInject is a marker interface for injectable objects which should
-// perform some action after injection of services.
-type PostInject interface {
-	PostInject() error
-}
+// inject populates fields of the given struct. The root parameter should always point to the top
+// of the struct object. Passing nil will set the root to be the reflected value of the given object.
+// The given integer path should be the field index path to the object from the root of the struct.
+// This function returns true if the struct value was updated. If the object conforms to the PostInject
+// interface, its hook is called after successful injection.
+func inject(c *Container, obj interface{}, root *reflect.Value, path []int) (bool, error) {
+	oi := reflect.Indirect(reflect.ValueOf(obj))
+	if oi.Kind() != reflect.Struct {
+		return false, nil
+	}
 
-const (
-	serviceTag  = "service"
-	optionalTag = "optional"
-)
-
-func inject(c serviceGetter, obj interface{}, root *reflect.Value, baseIndexPath []int) (bool, error) {
-	ov := reflect.ValueOf(obj)
-	oi := reflect.Indirect(ov)
 	ot := oi.Type()
 
 	if root == nil {
 		root = &oi
 	}
 
-	if oi.Kind() != reflect.Struct {
-		return false, nil
-	}
-
-	hasTag := false
+	updated := false
 	for i := 0; i < ot.NumField(); i++ {
-		indexPath := make([]int, len(baseIndexPath))
-		copy(indexPath, baseIndexPath)
-		indexPath = append(indexPath, i)
+		fieldPath := make([]int, len(path), len(path)+1)
+		copy(path, path)
+		fieldPath = append(fieldPath, i)
 
-		fieldType := ot.Field(i)
-		fieldValue := (*root).FieldByIndex(indexPath)
-		serviceTag := fieldType.Tag.Get(serviceTag)
-		optionalTag := fieldType.Tag.Get(optionalTag)
-
-		if fieldType.Anonymous {
-			if !fieldValue.CanSet() {
-				continue
-			}
-
-			wasZeroValue := false
-			if !reflect.Indirect(fieldValue).IsValid() {
-				initializedValue := reflect.New(fieldType.Type.Elem())
-				fieldValue.Set(initializedValue)
-				fieldValue = initializedValue
-				wasZeroValue = true
-			}
-
-			anonymousFieldHasTag, err := inject(c, fieldValue.Interface(), root, indexPath)
-			if err != nil {
-				return false, err
-			}
-
-			if anonymousFieldHasTag {
-				hasTag = true
-			} else if wasZeroValue {
-				zeroValue := reflect.Zero(fieldType.Type)
-				fieldValue = (*root).FieldByIndex(indexPath)
-				fieldValue.Set(zeroValue)
-			}
-
-			continue
-		}
-
-		if serviceTag == "" {
-			continue
-		}
-
-		hasTag = true
-
-		if err := loadServiceField(c, fieldType, fieldValue, serviceTag, optionalTag); err != nil {
+		fieldUpdated, err := injectField(c, ot.Field(i), root, fieldPath)
+		if err != nil {
 			return false, err
 		}
+
+		updated = updated || fieldUpdated
 	}
 
 	if pi, ok := obj.(PostInject); ok {
@@ -95,53 +51,108 @@ func inject(c serviceGetter, obj interface{}, root *reflect.Value, baseIndexPath
 		}
 	}
 
-	return hasTag, nil
+	return updated, nil
 }
 
-func loadServiceField(container serviceGetter, fieldType reflect.StructField, fieldValue reflect.Value, serviceTag, optionalTag string) error {
+const (
+	serviceTag  = "service"
+	optionalTag = "optional"
+)
+
+// injectField recursively sets the value of the given struct field. This uses the service struct tag
+// as the service key to match in the given container. If the field is a nested anonymous struct, its
+// fields are injected recursively. This function returns true if the field was updated.
+func injectField(c *Container, fieldType reflect.StructField, root *reflect.Value, indexPath []int) (bool, error) {
+	if fieldType.Anonymous {
+		return injectAnonymousField(c, fieldType, root, indexPath)
+	}
+
+	fieldValue := (*root).FieldByIndex(indexPath)
+	serviceTag := fieldType.Tag.Get(serviceTag)
+	optionalTag := fieldType.Tag.Get(optionalTag)
+
+	if serviceTag == "" {
+		return false, nil
+	}
+
+	optional := false
+	if optionalTag != "" {
+		val, err := strconv.ParseBool(optionalTag)
+		if err != nil {
+			return false, fmt.Errorf("field '%s' has an invalid optional tag", fieldType.Name)
+		}
+
+		optional = val
+	}
+
+	return loadServiceField(c, fieldType, fieldValue, serviceTag, optional)
+}
+
+// injectAnonymousField sets the value of the given struct field to the recursively injected value
+// for this field. If the field is unset, a zero value of the field's type will be used as a base.
+// This function returns true if the struct field was updated.
+func injectAnonymousField(c *Container, fieldType reflect.StructField, root *reflect.Value, indexPath []int) (bool, error) {
+	fieldValue := (*root).FieldByIndex(indexPath)
+	if !fieldValue.CanSet() {
+		return false, nil
+	}
+
+	wasZeroValue := false
+	if !reflect.Indirect(fieldValue).IsValid() {
+		wasZeroValue = true
+		initializedValue := reflect.New(fieldType.Type.Elem())
+		fieldValue.Set(initializedValue)
+		fieldValue = initializedValue
+	}
+
+	anonymousFieldHasTag, err := inject(c, fieldValue.Interface(), root, indexPath)
+	if err != nil {
+		return false, err
+	}
+
+	if !anonymousFieldHasTag && wasZeroValue {
+		zeroValue := reflect.Zero(fieldType.Type)
+		fieldValue = (*root).FieldByIndex(indexPath)
+		fieldValue.Set(zeroValue)
+	}
+
+	return true, nil
+}
+
+// loadServiceField sets the value of the given struct field to the value of the service registered to
+// the given service key in the given container. This function returns true if the field was updated.
+func loadServiceField(c *Container, fieldType reflect.StructField, fieldValue reflect.Value, serviceTag string, optional bool) (bool, error) {
 	if !fieldValue.IsValid() {
-		return fmt.Errorf("field '%s' is invalid", fieldType.Name)
+		return false, fmt.Errorf("field '%s' is invalid", fieldType.Name)
 	}
 
 	if !fieldValue.CanSet() {
-		return fmt.Errorf("field '%s' can not be set - it may be unexported", fieldType.Name)
+		return false, fmt.Errorf("field '%s' can not be set - it may be unexported", fieldType.Name)
 	}
 
-	value, err := container.Get(serviceTag)
+	value, err := c.Get(serviceTag)
 	if err != nil {
-		if optionalTag != "" {
-			val, err := strconv.ParseBool(optionalTag)
-			if err != nil {
-				return fmt.Errorf("field '%s' has an invalid optional tag", fieldType.Name)
-			}
-
-			if val {
-				return nil
-			}
+		if optional {
+			return false, nil
 		}
 
-		return err
+		return false, err
 	}
 
 	targetType := fieldValue.Type()
 	targetValue := reflect.ValueOf(value)
 
 	if !targetValue.IsValid() || !targetValue.Type().ConvertibleTo(targetType) {
-		return fmt.Errorf(
-			"field '%s' cannot be assigned a value of type %s",
-			fieldType.Name,
-			getTypeName(value),
-		)
+		var typeName string
+		if value == nil {
+			typeName = "nil"
+		} else {
+			typeName = reflect.TypeOf(value).String()
+		}
+
+		return false, fmt.Errorf("field '%s' cannot be assigned a value of type %s", fieldType.Name, typeName)
 	}
 
 	fieldValue.Set(targetValue.Convert(targetType))
-	return nil
-}
-
-func getTypeName(v interface{}) string {
-	if v == nil {
-		return "nil"
-	}
-
-	return reflect.TypeOf(v).String()
+	return true, nil
 }
