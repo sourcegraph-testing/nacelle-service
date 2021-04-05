@@ -10,6 +10,7 @@
 
 ### Changed
 
+- The `Inject` function and `PostInject` interface now receives a context parameter. [#10](https://github.com/go-nacelle/service/pull/10)
 - Change type of service keys from `string` to `interface{}`. [#4](https://github.com/go-nacelle/service/pull/4)
 - Replaced the `ServiceContainer` interface with `Container`, a struct with the same name and set of methods. [#7](https://github.com/go-nacelle/service/pull/7)
 - Renamed `NewServiceContainer` to `New`. [#7](https://github.com/go-nacelle/service/pull/7)

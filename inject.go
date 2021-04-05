@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -9,8 +10,8 @@ import (
 // Inject will attempt to populate the given type with values from the service container based on
 // the value's struct tags. An error may occur if a service has not been registered, a service has
 // a different type than expected, or struct tags are malformed.
-func Inject(c *Container, obj interface{}) error {
-	_, err := inject(c, obj, nil, nil)
+func Inject(ctx context.Context, c *Container, obj interface{}) error {
+	_, err := inject(ctx, c, obj, nil, nil)
 	return err
 }
 
@@ -19,7 +20,7 @@ func Inject(c *Container, obj interface{}) error {
 // The given integer path should be the field index path to the object from the root of the struct.
 // This function returns true if the struct value was updated. If the object conforms to the PostInject
 // interface, its hook is called after successful injection.
-func inject(c *Container, obj interface{}, root *reflect.Value, path []int) (bool, error) {
+func inject(ctx context.Context, c *Container, obj interface{}, root *reflect.Value, path []int) (bool, error) {
 	oi := reflect.Indirect(reflect.ValueOf(obj))
 	if oi.Kind() != reflect.Struct {
 		return false, nil
@@ -37,7 +38,7 @@ func inject(c *Container, obj interface{}, root *reflect.Value, path []int) (boo
 		copy(path, path)
 		fieldPath = append(fieldPath, i)
 
-		fieldUpdated, err := injectField(c, ot.Field(i), root, fieldPath)
+		fieldUpdated, err := injectField(ctx, c, ot.Field(i), root, fieldPath)
 		if err != nil {
 			return false, err
 		}
@@ -46,7 +47,7 @@ func inject(c *Container, obj interface{}, root *reflect.Value, path []int) (boo
 	}
 
 	if pi, ok := obj.(PostInject); ok {
-		if err := pi.PostInject(); err != nil {
+		if err := pi.PostInject(ctx); err != nil {
 			return false, err
 		}
 	}
@@ -62,9 +63,9 @@ const (
 // injectField recursively sets the value of the given struct field. This uses the service struct tag
 // as the service key to match in the given container. If the field is a nested anonymous struct, its
 // fields are injected recursively. This function returns true if the field was updated.
-func injectField(c *Container, fieldType reflect.StructField, root *reflect.Value, indexPath []int) (bool, error) {
+func injectField(ctx context.Context, c *Container, fieldType reflect.StructField, root *reflect.Value, indexPath []int) (bool, error) {
 	if fieldType.Anonymous {
-		return injectAnonymousField(c, fieldType, root, indexPath)
+		return injectAnonymousField(ctx, c, fieldType, root, indexPath)
 	}
 
 	fieldValue := (*root).FieldByIndex(indexPath)
@@ -91,7 +92,7 @@ func injectField(c *Container, fieldType reflect.StructField, root *reflect.Valu
 // injectAnonymousField sets the value of the given struct field to the recursively injected value
 // for this field. If the field is unset, a zero value of the field's type will be used as a base.
 // This function returns true if the struct field was updated.
-func injectAnonymousField(c *Container, fieldType reflect.StructField, root *reflect.Value, indexPath []int) (bool, error) {
+func injectAnonymousField(ctx context.Context, c *Container, fieldType reflect.StructField, root *reflect.Value, indexPath []int) (bool, error) {
 	fieldValue := (*root).FieldByIndex(indexPath)
 	if !fieldValue.CanSet() {
 		return false, nil
@@ -105,7 +106,7 @@ func injectAnonymousField(c *Container, fieldType reflect.StructField, root *ref
 		fieldValue = initializedValue
 	}
 
-	anonymousFieldHasTag, err := inject(c, fieldValue.Interface(), root, indexPath)
+	anonymousFieldHasTag, err := inject(ctx, c, fieldValue.Interface(), root, indexPath)
 	if err != nil {
 		return false, err
 	}

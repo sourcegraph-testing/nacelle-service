@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -12,7 +13,7 @@ func TestPostInject(t *testing.T) {
 	container := New()
 	obj := &testPostInjectProcess{}
 	container.Set("value", &TI{42})
-	err := Inject(container, obj)
+	err := Inject(context.Background(), container, obj)
 	require.Nil(t, err)
 	assert.Equal(t, 42.0, obj.FValue.val)
 }
@@ -25,7 +26,9 @@ type testPostInjectProcess struct {
 	FValue *TF
 }
 
-func (p *testPostInjectProcess) PostInject() error {
+var _ PostInject = &testPostInjectProcess{}
+
+func (p *testPostInjectProcess) PostInject(ctx context.Context) error {
 	p.FValue = &TF{float64(p.IValue.val)}
 	return nil
 }
@@ -39,7 +42,7 @@ func TestPostInjectChain(t *testing.T) {
 	container.Set("process", process)
 	container.Set("services", container)
 
-	err := Inject(container, obj)
+	err := Inject(context.Background(), container, obj)
 	require.Nil(t, err)
 	assert.Equal(t, 42.0, process.FValue.val)
 }
@@ -49,19 +52,23 @@ type testPostInjectProcessParent struct {
 	Child    *testPostInjectProcess `service:"process"`
 }
 
-func (p *testPostInjectProcessParent) PostInject() error {
-	return Inject(p.Services, p.Child)
+var _ PostInject = &testPostInjectProcessParent{}
+
+func (p *testPostInjectProcessParent) PostInject(ctx context.Context) error {
+	return Inject(ctx, p.Services, p.Child)
 }
 
 func TestPostInjectError(t *testing.T) {
 	container := New()
 	obj := &testPostInjectProcessError{}
-	err := Inject(container, obj)
+	err := Inject(context.Background(), container, obj)
 	assert.EqualError(t, err, "oops")
 }
 
 type testPostInjectProcessError struct{}
 
-func (p *testPostInjectProcessError) PostInject() error {
+var _ PostInject = &testPostInjectProcessError{}
+
+func (p *testPostInjectProcessError) PostInject(ctx context.Context) error {
 	return fmt.Errorf("oops")
 }
