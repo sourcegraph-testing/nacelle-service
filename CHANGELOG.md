@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [v2.0.0] - 2021-05-31
+
 ### Added
 
 - Added `InjectableServiceKey`. [#4](https://github.com/go-nacelle/service/pull/4)
@@ -44,3 +48,4 @@
 [v1.0.0]: https://github.com/go-nacelle/service/releases/tag/v1.0.0
 [v1.0.1]: https://github.com/go-nacelle/service/compare/v1.0.0...v1.0.1
 [v1.0.2]: https://github.com/go-nacelle/service/compare/v1.0.1...v1.0.2
+[v2.0.0]: https://github.com/go-nacelle/service/compare/v1.0.2...v2.0.0

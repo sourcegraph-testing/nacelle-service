@@ -1,4 +1,4 @@
-module github.com/go-nacelle/service
+module github.com/go-nacelle/service/v2
 
 go 1.16
 
