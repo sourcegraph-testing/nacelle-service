@@ -48,8 +48,9 @@
 
 - Migrated from [efritz/bussard](https://github.com/efritz/bussard).
 
-[Unreleased]: https://github.com/go-nacelle/service/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/go-nacelle/service/compare/v2.0.1...HEAD
 [v1.0.0]: https://github.com/go-nacelle/service/releases/tag/v1.0.0
 [v1.0.1]: https://github.com/go-nacelle/service/compare/v1.0.0...v1.0.1
 [v1.0.2]: https://github.com/go-nacelle/service/compare/v1.0.1...v1.0.2
 [v2.0.0]: https://github.com/go-nacelle/service/compare/v1.0.2...v2.0.0
+[v2.0.1]: https://github.com/go-nacelle/service/compare/v2.0.0...v2.0.1
