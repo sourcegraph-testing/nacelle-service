@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [v2.0.1] - 2022-10-10
+
+### Added
+
+- Added `WithContainer` and `FromContext`. [#11](https://github.com/go-nacelle/service/pull/11)
+
 ## [v2.0.0] - 2021-05-31
 
 ### Added
