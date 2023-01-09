@@ -1,4 +1,4 @@
-module github.com/go-nacelle/service/v2
+module github.com/sourcegraph-testing/nacelle-service/v5
 
 go 1.16
 
