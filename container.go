@@ -1,3 +1,4 @@
+// Package service provides Nacelle's dependency container and struct injection.
 package service
 
 import (
