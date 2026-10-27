@@ -9,3 +9,6 @@
 ---
 
 See the package documentation on [nacelle.dev](https://nacelle.dev/docs/topics/service).
+
+## License
+License notice updated for 2026.
